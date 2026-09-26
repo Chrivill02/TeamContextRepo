@@ -33,6 +33,7 @@ export function teamStatusMessage(statusRes, activityRes, me) {
   }
 
   const events = activityRes.ok ? activityRes.data.events : [];
+  if (!activityRes.ok) lines.push('', problem(activityRes));
   if (events.length) {
     lines.push('', 'Recent activity (newest first):');
     for (const e of events) {
