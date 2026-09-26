@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node.js ≥ 20 (ESM), Express 5, `pg`, cors, dotenv, Supabase Postgres (schema `teamcontext` + función plpgsql), `@electric-sql/pglite` (Postgres en memoria para los tests), `@modelcontextprotocol/sdk` v1 + zod v3, `node:test`, HTML/JS vanilla para el dashboard y Vercel para el deploy.
 
-**Fuente de verdad:** [TEAMCONTEXT_CONTEXT.md](../../../TEAMCONTEXT_CONTEXT.md). Este plan reemplaza a `teamcontext-mvp-plan.md`, que quedó incompleto: no tiene `activity`, `release_all`, `team_status`, TTL ni el custom mode de Bob.
+**Fuente de verdad:** [TEAMCONTEXT_CONTEXT.md](../../../TEAMCONTEXT_CONTEXT.md) (reglas de la hackathon y contrato de la API). Este plan es el único plan vigente.
 
 ## Global Constraints
 
