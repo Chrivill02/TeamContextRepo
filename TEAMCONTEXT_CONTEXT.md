@@ -15,7 +15,7 @@
 - **Bobcoins:** 40 per person on the hackathon-provisioned Bob account. No top-ups once exhausted. Use the hackathon instance (not personal accounts). Plan prompts carefully; prefer Plan mode → Code mode on well-scoped tasks.
 - **Bob IDE version:** v2.0.2 or later.
 - **Data rules:** Bring your own data. No company-confidential data, no client data, no personal information, no social media data. Public data only if terms allow; keep a list of sources. TeamContext should use only sample/demo repos and synthetic developer IDs.
-- **No secrets in the repo.** `.env`, `.bob/mcp.json` and any tokens go in `.gitignore` (and `.bobignore` where relevant).
+- **No secrets in the repo.** `.env`, `.env.local`, `.vercel/`, `.bob/mcp.json` and any tokens go in `.gitignore` (and `.bobignore` where relevant).
 - **Optional IBM extras:** watsonx.ai (Granite models) and watsonx Orchestrate may be used; nice-to-have, not required.
 
 ### Required evidence
@@ -58,24 +58,28 @@ Conflicts avoided and coordination time saved, shown as a **before/after** demo 
 ## 3. Architecture
 
 ```
-teamcontext/
-├── server/                    # Central Server (Node.js + Express + better-sqlite3), deployed to Railway/Render
+TeamContextRepo/
+├── supabase/
+│   └── migrations/            # Postgres schema `teamcontext` + atomic acquire() function
+├── server/                    # Central Server (Express 5 on Vercel, data in Supabase Postgres). Vercel Root Directory.
 │   ├── package.json
-│   ├── index.js               # Express entry, static dashboard, /health
-│   ├── db.js                  # SQLite schema + queries
-│   ├── routes/
-│   │   └── locks.js           # /api/locks/*
-│   ├── middleware/
-│   │   └── auth.js            # Bearer TEAM_TOKEN check (write endpoints only)
+│   ├── server.js              # Vercel entrypoint: `export default app` (listens locally)
+│   ├── lib/
+│   │   ├── db.js              # pg Pool → Supabase (TLS verified with Supabase CA)
+│   │   ├── store.js           # lock/activity logic (no HTTP)
+│   │   ├── auth.js            # Bearer TEAM_TOKEN check (write endpoints only)
+│   │   ├── routes.js          # /api/*
+│   │   └── app.js             # express app factory, /health, CORS
+│   ├── public/                # Dashboard (static HTML/JS), served by Vercel's CDN
+│   ├── test/                  # node:test + PGlite (in-memory Postgres running the real migration)
 │   └── .env.example
 ├── mcp-server/                # Local MCP server (stdio), @modelcontextprotocol/sdk
 │   ├── package.json
-│   └── index.js
-├── dashboard/                 # Static HTML/JS, served by Express
-│   ├── index.html
-│   └── app.js
-├── bob/                       # Bob custom mode + rules (committed, no secrets)
+│   ├── index.js
+│   └── lib/                   # paths, repo detection, HTTP client, messages
+├── bob/                       # Bob custom mode + rules + mcp.example.json (committed, no secrets)
 ├── bob_sessions/              # REQUIRED Bob task summary screenshots (PNG)
+├── docs/superpowers/plans/    # Implementation plan (task split, code, schedule)
 ├── DATA_SOURCES.md
 ├── LICENSE                    # MIT
 └── README.md
@@ -85,31 +89,40 @@ teamcontext/
 - Polling every 4 s instead of WebSockets/SSE.
 - Shared team token + free-text `developer_id` instead of per-user auth.
 - Explicit MCP tools (no interception of Bob's internal tools); the custom mode rules make the calls automatic.
+- **Hosting: Vercel** (Express, zero-config) + **Supabase Postgres**. Tables live in a private schema `teamcontext` (not exposed by the Supabase Data API); only the server touches them via `POSTGRES_URL`.
+- `acquire` is a single plpgsql function (one transaction) so concurrent Vercel instances can never grant the same lock twice.
 
 ---
 
-## 4. Database schema
+## 4. Database schema (Supabase Postgres)
+
+Full migration: `supabase/migrations/20260926000000_teamcontext.sql`.
 
 ```sql
-CREATE TABLE IF NOT EXISTS locks (
-  lock_id      TEXT PRIMARY KEY,
-  developer_id TEXT NOT NULL,
-  file_path    TEXT NOT NULL,          -- normalized, repo-relative, forward slashes
-  repo         TEXT NOT NULL,
-  acquired_at  TEXT NOT NULL,          -- ISO 8601 UTC
-  UNIQUE (file_path, repo)
+create schema if not exists teamcontext;
+
+create table teamcontext.locks (
+  lock_id      uuid primary key default gen_random_uuid(),
+  developer_id text not null,
+  file_path    text not null,          -- normalized, repo-relative, forward slashes
+  repo         text not null,
+  acquired_at  timestamptz not null,
+  unique (file_path, repo)
 );
 
-CREATE TABLE IF NOT EXISTS activity (
-  id           TEXT PRIMARY KEY,
-  developer_id TEXT NOT NULL,
-  repo         TEXT NOT NULL,
-  file_path    TEXT,                   -- null for task-level entries
-  event        TEXT NOT NULL,          -- 'lock' | 'unlock' | 'conflict' | 'release_all'
-  summary      TEXT,                   -- optional handoff note: what was done / what's pending
-  created_at   TEXT NOT NULL
+create table teamcontext.activity (
+  id           bigint generated always as identity primary key,
+  developer_id text not null,
+  repo         text not null,
+  file_path    text,                   -- null for task-level entries
+  event        text not null,          -- 'lock' | 'unlock' | 'conflict' | 'release_all'
+  summary      text,                   -- optional handoff note: what was done / what's pending
+  created_at   timestamptz not null
 );
+-- + teamcontext.acquire(developer, file, repo, ttl_minutes, now) → jsonb { status, lock }
 ```
+
+The API always returns timestamps as ISO 8601 UTC strings (`2026-09-26T10:00:00.000Z`).
 
 `LOCK_TTL_MINUTES` (env, default 30): a lock older than the TTL is treated as expired.
 
@@ -189,7 +202,7 @@ Also generate/maintain `AGENTS.md` via Bob `/init` so project context persists a
 
 ## 8. Dashboard
 
-- Single static page, no build step, served by Express at the public URL.
+- Single static page, no build step, in `server/public/`, served by Vercel's CDN at the public URL (same origin as the API).
 - Polls `/api/locks/status` and `/api/activity` every 4 s. **No token in the HTML.**
 - Shows: active locks (red rows: developer, file, repo, time held), "All clear" green state when empty, recent conflicts highlighted, activity feed with handoff summaries, last-updated timestamp.
 - Optional stretch: "Generate standup" button that summarizes the last N hours of `activity` (via watsonx.ai Granite if time allows; otherwise a deterministic grouped summary).
@@ -198,9 +211,9 @@ Also generate/maintain `AGENTS.md` via Bob `/init` so project context persists a
 
 ## 9. Build order (strict)
 
-1. **Server core** — Express, SQLite schema (both tables), auth middleware on write routes only, `/health`, CORS.
+1. **Server core** — Postgres migration (both tables + `acquire` function), lock store tested with PGlite, Express, auth middleware on write routes only, `/health`, CORS.
 2. **Lock routes** — acquire (idempotent + TTL), release (+summary), release_all, status, activity, stale. Test with curl.
-3. **Deploy** — Railway preferred (Render free tier sleeps → cold starts can time out MCP calls; SQLite disk is ephemeral on redeploy — acceptable for the hackathon). `TEAM_TOKEN` only in platform env vars.
+3. **Deploy** — Supabase (via Vercel Marketplace) + Vercel (Root Directory `server/`). Apply the migration in the Supabase SQL editor. `TEAM_TOKEN`, `POSTGRES_URL`, `SUPABASE_CA_CERT` only in Vercel env vars (`vercel env pull .env.local` for local dev).
 4. **Local MCP server** — four tools, repo detection, path normalization, graceful failure.
 5. **Bob custom mode + rules** — then verify Bob calls the tools automatically without being asked.
 6. **Dashboard** — locks, conflicts, activity feed.
@@ -223,14 +236,15 @@ Use a small public/sample repo (no private or client code).
 4. Close with the metric: conflicts avoided and minutes saved, plus a flash of the `bob_sessions/` folder.
 5. Narrative hook: "We built TeamContext using TeamContext" (only claim this for the phase after the MVP was working).
 
-Before recording: hit `/health` to wake the server; clear stale locks.
+Before recording: hit `/health` and `/api/locks/status` (warms the function and the DB connection); clear stale locks with `DELETE /api/locks/stale {"older_than_minutes":0}`.
 
 ---
 
 ## 11. Deployment checklist
 
-- [ ] `TEAM_TOKEN` only in hosting env vars
-- [ ] `.env`, `.bob/mcp.json` in `.gitignore`
+- [ ] `TEAM_TOKEN`, `POSTGRES_URL`, `SUPABASE_CA_CERT` only in Vercel env vars
+- [ ] `.env`, `.env.local`, `.vercel/`, `.bob/mcp.json` in `.gitignore`
+- [ ] Migration applied in Supabase; Supabase project not paused
 - [ ] `/health` returns 200 on the public URL
 - [ ] Dashboard loads from the public URL with no token in its source
 - [ ] Both developers have the MCP server and the custom mode configured
