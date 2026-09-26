@@ -1,7 +1,9 @@
 function problem(res) {
   if (res.status === 401) return '⚠️ TeamContext: TEAM_TOKEN rejected by the server. Tell the user to fix the MCP config.';
   const reason = res.error ?? `HTTP ${res.status}`;
-  return `⚠️ TeamContext server unreachable (${reason}). Coordination is OFFLINE: tell the user before editing shared files.`;
+  return res.status === 0
+    ? `⚠️ TeamContext server unreachable (${reason}). Coordination is OFFLINE: tell the user before editing shared files.`
+    : `⚠️ TeamContext request failed (${reason}). Coordination is OFFLINE: tell the user before editing shared files.`
 }
 
 export function lockMessage(res, filePath) {
