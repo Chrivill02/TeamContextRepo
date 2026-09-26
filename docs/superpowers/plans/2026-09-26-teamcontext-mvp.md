@@ -29,7 +29,6 @@
 ---
 
 ## Reparto del trabajo (2 personas)
-![alt text](image.png)
 La división sigue las fronteras del sistema. El **contrato de la API** (sección 5 del contexto) es la interfaz entre las dos personas, así que pueden trabajar en paralelo desde el minuto 0 sin bloquearse.
 
 | | **Christian — "Supabase + API en Vercel + Dashboard + Video"** | **Eswin — "MCP + Bob + Textos"** |
