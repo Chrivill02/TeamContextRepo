@@ -26,13 +26,13 @@
 - `server.connect(new StdioServerTransport())` is the last line before the ready log.
 
 **Todo List:**
-- [ ] Create `mcp-server/index.js` using the verbatim implementation from the plan.
-- [ ] Verify the file has `#!/usr/bin/env node` as its first line.
-- [ ] Verify no `console.log` calls exist in the file.
+- [x] Create `mcp-server/index.js` using the verbatim implementation from the plan.
+- [x] Verify the file has `#!/usr/bin/env node` as its first line.
+- [x] Verify no `console.log` calls exist in the file.
 
 **Relevant Context:** `docs/superpowers/plans/2026-09-26-teamcontext-mvp.md` §Task 5 Step 1. Critical: `inputSchema` uses `zod` schemas directly (not plain JSON Schema objects). The `team_status` tool has `inputSchema: {}`.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
@@ -67,12 +67,12 @@
 - File is valid JSON.
 
 **Todo List:**
-- [ ] Create `bob/` directory if it doesn't exist.
-- [ ] Create `bob/mcp.example.json` with the template from the plan.
+- [x] Create `bob/` directory if it doesn't exist.
+- [x] Create `bob/mcp.example.json` with the template from the plan.
 
 **Relevant Context:** `docs/superpowers/plans/2026-09-26-teamcontext-mvp.md` §Task 5 Step 3. `REPO_ROOT` is required in the template because Bob may launch the MCP process from an unpredictable `cwd`.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
