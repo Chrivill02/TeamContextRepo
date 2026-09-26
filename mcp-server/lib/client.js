@@ -13,8 +13,14 @@ export function createClient({ baseUrl, token, developerId, repo, timeoutMs = 10
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,
       });
+      let data;
+      try {
+        data = await res.json();
+      } catch (err) {
+        if (controller.signal.aborted) throw controller.signal.reason ?? err;
+        data = {};
+      }
       clearTimeout(timer);
-      const data = await res.json().catch(() => ({}));
       return { ok: res.ok, status: res.status, data };
     } catch (err) {
       clearTimeout(timer);
