@@ -15,7 +15,8 @@ function git(args, cwd) {
 }
 
 export function detectRepo(cwd) {
-  const root = git(['rev-parse', '--show-toplevel'], cwd) ?? cwd;
+  // git prints "/" even on Windows; resolve to the OS-native form so both branches agree.
+  const root = path.resolve(git(['rev-parse', '--show-toplevel'], cwd) ?? cwd);
   const remote = git(['remote', 'get-url', 'origin'], root);
   const name = (remote && repoNameFromRemote(remote)) || path.basename(root);
   return { root, name };
