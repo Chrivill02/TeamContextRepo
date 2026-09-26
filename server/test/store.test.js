@@ -106,6 +106,25 @@ test('activeLocks without repo returns every repo', async (t) => {
   assert.equal((await store.activeLocks()).length, 2);
 });
 
+test('acquire racing a release is granted, never a null-holder conflict', async (t) => {
+  const db = await testDb();
+  t.after(() => db.close());
+  const store = createStore(db, { now: () => new Date('2026-09-26T10:00:00.000Z') });
+  await store.acquire(A);
+  // Simulates alice's release committing between bob's INSERT ... ON CONFLICT DO NOTHING
+  // and his SELECT ... FOR UPDATE (only reachable with concurrent connections in production).
+  // Statement-level triggers fire even when ON CONFLICT DO NOTHING inserts no row.
+  await db.exec(`
+    create function teamcontext.sim_release() returns trigger language plpgsql as $$
+    begin delete from teamcontext.locks where developer_id = 'alice'; return null; end $$;
+    create trigger sim_release after insert on teamcontext.locks
+      for each statement execute function teamcontext.sim_release();
+  `);
+  const r = await store.acquire(B);
+  assert.equal(r.status, 'granted');
+  assert.equal(r.lock.developer_id, 'bob');
+});
+
 test('deleteStale removes locks older than N minutes (0 clears everything)', async (t) => {
   const { store, clock } = await setup(t, 120);
   await store.acquire(A);

@@ -9,5 +9,9 @@ export function createPool(connectionString, caCert) {
   if (!caCert) throw new Error('SUPABASE_CA_CERT is required (Supabase → Database settings → SSL → Download certificate)');
   const url = new URL(connectionString);
   url.searchParams.delete('sslmode');
-  return new pg.Pool({ connectionString: url.toString(), ssl: { ca: caCert, rejectUnauthorized: true }, max: 3 });
+  const pool = new pg.Pool({ connectionString: url.toString(), ssl: { ca: caCert, rejectUnauthorized: true }, max: 3 });
+  // The pooler drops idle connections (and Vercel freezes functions); without a listener,
+  // pg's 'error' event on an idle client would crash the whole process.
+  pool.on('error', (err) => console.error('[db] idle client error:', err.message));
+  return pool;
 }
