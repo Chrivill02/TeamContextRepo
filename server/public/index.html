@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TeamContext</title>
+  <style>
+    :root { --bg:#0f1115; --card:#181b22; --text:#e6e8ee; --muted:#8a90a0; --red:#e5484d; --green:#30a46c; --amber:#f5a524; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:15px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--text); padding:24px 16px; }
+    main { max-width:1100px; margin:0 auto; display:grid; gap:16px; grid-template-columns: 1fr 1fr; }
+    header { max-width:1100px; margin:0 auto 16px; display:flex; flex-wrap:wrap; gap:16px; align-items:baseline; justify-content:space-between; }
+    h1 { margin:0; font-size:22px; } h2 { margin:0 0 12px; font-size:16px; color:var(--muted); font-weight:600; }
+    section { background:var(--card); border-radius:12px; padding:16px; overflow-x:auto; }
+    .stats { display:flex; gap:12px; } .stat { background:var(--card); border-radius:10px; padding:8px 14px; }
+    .stat b { font-size:20px; display:block; } .stat.conflicts b { color:var(--amber); }
+    table { width:100%; border-collapse:collapse; } th, td { text-align:left; padding:8px; border-bottom:1px solid #262a33; }
+    tr.locked td { background:color-mix(in srgb, var(--red) 18%, transparent); }
+    .all-clear { padding:24px; text-align:center; border-radius:10px; background:color-mix(in srgb, var(--green) 20%, transparent); font-weight:600; }
+    .feed { list-style:none; margin:0; padding:0; } .feed li { padding:8px; border-bottom:1px solid #262a33; }
+    .event.conflict { background:color-mix(in srgb, var(--amber) 18%, transparent); border-radius:6px; }
+    .summary { margin:4px 0 0 24px; color:var(--text); font-style:italic; }
+    .muted { color:var(--muted); font-size:13px; } #updated.error { color:var(--red); }
+    code { font-size:13px; }
+    @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚦 TeamContext <span class="muted">— <span id="repo"></span></span></h1>
+    <div class="stats">
+      <div class="stat"><b id="lock-count">0</b><span class="muted">files locked</span></div>
+      <div class="stat conflicts"><b id="conflicts">0</b><span class="muted">conflicts avoided</span></div>
+    </div>
+    <span id="updated" class="muted">Loading…</span>
+  </header>
+  <main>
+    <section><h2>Who is editing what</h2><div id="locks"></div></section>
+    <section><h2>Activity &amp; handoff notes</h2><div id="activity"></div></section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
