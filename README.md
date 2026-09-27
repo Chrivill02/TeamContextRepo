@@ -49,10 +49,9 @@ TEAMCONTEXT_CONTEXT.md Project context: hackathon rules, API contract, demo scri
 4. Check that `curl https://<project>.vercel.app/health` returns `{"ok":true}`.
 
 ### 2. Local MCP server (each developer)
-```bash
-cd mcp-server && npm ci
-```
-Copy `bob/mcp.example.json` into your project's `.bob/mcp.json` (gitignored) and fill in `CENTRAL_SERVER_URL`, `TEAM_TOKEN`, a unique `DEVELOPER_ID` and `REPO_ROOT`.
+The MCP server is published on npm as [`teamcontext-mcp`](https://www.npmjs.com/package/teamcontext-mcp), so there is nothing to clone or install: your MCP client runs it with `npx -y teamcontext-mcp`.
+
+Copy `bob/mcp.example.json` into your project's `.bob/mcp.json` (gitignored) and fill in `CENTRAL_SERVER_URL`, `TEAM_TOKEN`, a unique `DEVELOPER_ID` and `REPO_ROOT`. See [mcp-server/README.md](mcp-server/README.md) for details.
 
 ### 3. Bob custom mode
 Install `bob/custom_modes.yaml` and `bob/rules-teamcontext/` in your project's `.bob/` folder, then select the **🚦 TeamContext** mode in Bob.
