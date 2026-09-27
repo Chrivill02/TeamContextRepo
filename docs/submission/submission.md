@@ -53,7 +53,7 @@ While testing, we saw Bob unlock files but skip the final handoff. We fixed it b
 - The MCP server libraries (path normalization, repository detection, a resilient HTTP client and tool messages) and their tests (task 20).
 - The MCP server entrypoint that registers the four tools over stdio (task 21).
 - The live dashboard (task 06) and other server tasks run by my teammate.
-- `AGENTS.md` gives Bob persistent project context across sessions: architecture, commands, testing rules and conventions. [TODO: confirm whether it was generated with `/init`.]
+- We ran Bob's `/init` command to generate `AGENTS.md` plus rules for each Bob mode (`.bob/rules-agent/`, `.bob/rules-ask/`, `.bob/rules-plan/`). Every new Bob session starts with the project's architecture, commands, testing rules and conventions.
 
 Screenshots of every Bob task session summary are in `bob_sessions/`, from both team members.
 

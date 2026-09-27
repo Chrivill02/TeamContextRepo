@@ -37,6 +37,8 @@ Every developer on the team now codes with their own AI agent, and those agents 
 3. **Central server (`server/`)**: a REST API for locks and activity. Lock acquisition is a single Postgres function running in one transaction, so two agents can never hold the same file. Locks expire after a TTL, so a crashed session never blocks the team.
 4. **Dashboard (`server/public/`)**: a static page that polls every 4 seconds and holds no secrets.
 
+![TeamContext dashboard: files locked, conflicts avoided, active developers, and a feed of handoff notes](docs/submission/dashboard.png)
+
 When a file is taken, the second agent receives:
 
 ```
@@ -67,7 +69,7 @@ Every teammate must use the same repository (same `origin` remote) so file paths
 IBM Bob is both the core of the product and the tool we built it with.
 
 - **Bob runs TeamContext.** The 🚦 TeamContext custom mode, its mode-specific rules and the MCP connection in `.bob/mcp.json` make Bob coordinate with teammates without being asked.
-- **Bob built TeamContext.** We split the work into scoped tasks from a written plan ([docs/superpowers/plans/](docs/superpowers/plans/)) and ran them in Bob: the MCP libraries and their tests, the MCP server entrypoint, the live dashboard and more. [AGENTS.md](AGENTS.md) keeps project context across Bob sessions.
+- **Bob built TeamContext.** We split the work into scoped tasks from a written plan ([docs/superpowers/plans/](docs/superpowers/plans/)) and ran them in Bob: the MCP libraries and their tests, the MCP server entrypoint, the live dashboard and more. Bob's `/init` generated [AGENTS.md](AGENTS.md) and rules for each mode in `.bob/`, so every Bob session starts with the project's context.
 - **Evidence.** Screenshots of the Bob task session summaries from both team members are in [bob_sessions/](bob_sessions/).
 
 ## Repository layout
