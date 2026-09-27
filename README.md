@@ -11,6 +11,7 @@ Built for the **IBM Bob 2.0 Hackathon** (lablab.ai × IBM) by Eswin Poroj and Ch
 | **Live dashboard** | https://team-context-omega.vercel.app |
 | **MCP server on npm** | [`teamcontext-mcp`](https://www.npmjs.com/package/teamcontext-mcp) · `npm i teamcontext-mcp` |
 | **Demo repository** | [Chrivill02/teamcontext-demo](https://github.com/Chrivill02/teamcontext-demo) |
+| **Video demo** | [Watch on Google Drive](https://drive.google.com/file/d/1E7lNtzuJoNwZQinQisr15RdfiCxCK8Yz/view?usp=sharing) |
 
 ## The problem
 
