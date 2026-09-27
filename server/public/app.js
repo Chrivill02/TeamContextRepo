@@ -1,4 +1,4 @@
-import { renderLocks, renderActivity, countConflicts } from './view.js';
+import { renderLocks, renderActivity, countConflicts, renderStandup } from './view.js';
 
 const repo = new URLSearchParams(location.search).get('repo');
 const repoQuery = repo ? `repo=${encodeURIComponent(repo)}` : '';
@@ -32,3 +32,9 @@ async function refresh() {
 $('repo').textContent = repo ?? 'all repos';
 refresh();
 setInterval(refresh, 4000);
+
+$('standup-btn').addEventListener('click', async () => {
+  if (!repo) { $('standup').textContent = 'Open the dashboard with ?repo=<name> to generate a standup.'; return; }
+  const { developers } = await getJson(`/api/standup?repo=${encodeURIComponent(repo)}&hours=8`);
+  $('standup').innerHTML = renderStandup(developers);
+});

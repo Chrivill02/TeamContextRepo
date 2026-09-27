@@ -33,3 +33,13 @@ export function renderActivity(events, now = new Date()) {
 }
 
 export const countConflicts = (events) => events.filter((e) => e.event === 'conflict').length;
+
+export function renderStandup(developers) {
+  if (!developers.length) return '<p class="muted">Nothing to report yet.</p>';
+  return developers
+    .map((d) => `<div class="standup"><strong>${escapeHtml(d.developer_id)}</strong>` +
+      `${d.files.length ? `<div>Files: ${d.files.map((f) => `<code>${escapeHtml(f)}</code>`).join(', ')}</div>` : ''}` +
+      `${d.handoffs.map((h) => `<div class="summary">${escapeHtml(h)}</div>`).join('')}` +
+      `${d.conflicts ? `<div class="muted">${d.conflicts} conflict${d.conflicts > 1 ? 's' : ''} avoided</div>` : ''}</div>`)
+    .join('');
+}

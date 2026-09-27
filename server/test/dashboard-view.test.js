@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { escapeHtml, timeAgo, renderLocks, renderActivity, countConflicts } from '../public/view.js';
+import { escapeHtml, timeAgo, renderLocks, renderActivity, countConflicts, renderStandup } from '../public/view.js';
 
 const now = new Date('2026-09-26T10:10:00.000Z');
 
@@ -35,3 +35,11 @@ test('renderActivity highlights conflicts and shows handoff summaries escaped', 
 
 test('countConflicts', () =>
   assert.equal(countConflicts([{ event: 'conflict' }, { event: 'lock' }, { event: 'conflict' }]), 2));
+
+test('renderStandup lists each developer with files and notes', () => {
+  const html = renderStandup([{ developer_id: 'alice', files: ['src/header.js'], handoffs: ['Added toggle'], conflicts: 1 }]);
+  assert.match(html, /alice/);
+  assert.match(html, /src\/header\.js/);
+  assert.match(html, /Added toggle/);
+  assert.match(html, /1 conflict avoided/);
+});

@@ -63,5 +63,12 @@ export function createApiRouter(store, auth) {
     res.json({ deleted: await store.deleteStale(minutes) });
   });
 
+  router.get('/standup', async (req, res) => {
+    const repo = repoOf(req.query);
+    if (!repo) return res.status(400).json({ error: 'repo is required' });
+    const hours = Math.min(Math.max(Number(req.query.hours) || 8, 1), 72);
+    res.json({ developers: await store.standup(repo, hours) });
+  });
+
   return router;
 }

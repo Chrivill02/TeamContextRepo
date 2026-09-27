@@ -134,3 +134,16 @@ test('deleteStale removes locks older than N minutes (0 clears everything)', asy
   assert.deepEqual((await store.activeLocks('demo-repo')).map((l) => l.developer_id), ['bob']);
   assert.equal(await store.deleteStale(0), 1);
 });
+
+test('standup groups finished files, handoffs and conflicts per developer', async (t) => {
+  const { store, clock } = await setup(t);
+  await store.acquire(A);
+  await store.acquire(B);                             // conflict for bob
+  clock.advance(10);
+  await store.release({ ...A, summary: 'Added dark mode toggle' });
+  await store.releaseAll({ developerId: 'alice', repo: 'demo-repo', summary: 'Header done, tests pending' });
+  assert.deepEqual(await store.standup('demo-repo', 8), [
+    { developer_id: 'alice', files: ['src/header.js'], handoffs: ['Added dark mode toggle', 'Header done, tests pending'], conflicts: 0 },
+    { developer_id: 'bob', files: [], handoffs: [], conflicts: 1 },
+  ]);
+});

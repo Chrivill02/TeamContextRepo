@@ -86,5 +86,23 @@ export function createStore(db, { ttlMinutes = 30, now = () => new Date() } = {}
     return rows.length;
   }
 
-  return { acquire, release, releaseAll, activeLocks, activity, deleteStale };
+  async function standup(repo, hours = 8) {
+    const { rows } = await db.query(
+      `SELECT developer_id, file_path, event, summary FROM teamcontext.activity
+       WHERE repo = $1::text AND created_at >= $2::timestamptz - $3::float8 * interval '1 hour'
+       ORDER BY created_at ASC, id ASC`,
+      [repo, now().toISOString(), hours],
+    );
+    const byDev = new Map();
+    for (const e of rows) {
+      const d = byDev.get(e.developer_id) ?? { developer_id: e.developer_id, files: [], handoffs: [], conflicts: 0 };
+      if (e.event === 'unlock' && e.file_path && !d.files.includes(e.file_path)) d.files.push(e.file_path);
+      if ((e.event === 'unlock' || e.event === 'release_all') && e.summary) d.handoffs.push(e.summary);
+      if (e.event === 'conflict') d.conflicts += 1;
+      byDev.set(e.developer_id, d);
+    }
+    return [...byDev.values()];
+  }
+
+  return { acquire, release, releaseAll, activeLocks, activity, deleteStale, standup };
 }
