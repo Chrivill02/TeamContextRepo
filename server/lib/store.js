@@ -86,23 +86,40 @@ export function createStore(db, { ttlMinutes = 30, now = () => new Date() } = {}
     return rows.length;
   }
 
-  async function standup(repo, hours = 8) {
+  // A developer's "session" is everything they did in the last `hours`.
+  async function standup(repo, hours = 24) {
     const { rows } = await db.query(
-      `SELECT developer_id, file_path, event, summary FROM teamcontext.activity
+      `SELECT developer_id, file_path, event, summary, created_at FROM teamcontext.activity
        WHERE repo = $1::text AND created_at >= $2::timestamptz - $3::float8 * interval '1 hour'
        ORDER BY created_at ASC, id ASC`,
       [repo, now().toISOString(), hours],
     );
     const byDev = new Map();
     for (const e of rows) {
-      const d = byDev.get(e.developer_id) ?? { developer_id: e.developer_id, files: [], handoffs: [], conflicts: 0 };
+      const at = toIso(e.created_at);
+      const d = byDev.get(e.developer_id) ?? {
+        developer_id: e.developer_id, files: [], handoffs: [], conflicts: 0,
+        tasks_completed: 0, first_at: at, last_at: at, timeline: [],
+      };
       if (e.event === 'unlock' && e.file_path && !d.files.includes(e.file_path)) d.files.push(e.file_path);
       if ((e.event === 'unlock' || e.event === 'release_all') && e.summary) d.handoffs.push(e.summary);
       if (e.event === 'conflict') d.conflicts += 1;
+      if (e.event === 'release_all') d.tasks_completed += 1;
+      d.last_at = at;
+      d.timeline.push({ event: e.event, file_path: e.file_path, summary: e.summary, created_at: at });
       byDev.set(e.developer_id, d);
     }
     return [...byDev.values()];
   }
 
-  return { acquire, release, releaseAll, activeLocks, activity, deleteStale, standup };
+  async function conflictCount(repo) {
+    const { rows } = await db.query(
+      `SELECT count(*)::int AS n FROM teamcontext.activity
+       WHERE event = 'conflict' AND ($1::text IS NULL OR repo = $1::text)`,
+      [repo ?? null],
+    );
+    return rows[0].n;
+  }
+
+  return { acquire, release, releaseAll, activeLocks, activity, deleteStale, standup, conflictCount, ttlMinutes };
 }

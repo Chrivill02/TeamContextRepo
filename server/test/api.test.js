@@ -74,11 +74,16 @@ test('status and activity are public and filter by repo', async (t) => {
   assert.equal(status.status, 200);
   assert.equal(status.body.count, 1);
   assert.equal(status.body.active_locks[0].file_path, 'src/header.js');
+  assert.equal(status.body.ttl_minutes, 30);
+  assert.equal(status.body.conflicts_avoided, 0);
 
   const activity = await call('GET', '/api/activity?repo=demo-repo&limit=5', null, { auth: false });
   assert.equal(activity.status, 200);
   assert.equal(activity.body.events.length, 1);
   assert.equal(activity.body.events[0].event, 'lock');
+
+  await call('POST', '/api/locks/acquire', { ...lock, developer_id: 'bob' });
+  assert.equal((await call('GET', '/api/locks/status?repo=demo-repo', null, { auth: false })).body.conflicts_avoided, 1);
 });
 
 test('release returns 200 with summary logged, 404 when not held', async (t) => {
@@ -107,4 +112,15 @@ test('DELETE /api/locks/stale validates and returns deleted count', async (t) =>
   await call('POST', '/api/locks/acquire', lock);
   assert.equal((await call('DELETE', '/api/locks/stale', { older_than_minutes: 'x' })).status, 400);
   assert.deepEqual(await call('DELETE', '/api/locks/stale', { older_than_minutes: 0 }), { status: 200, body: { deleted: 1 } });
+});
+
+test('standup is public, needs a repo and returns developer sessions', async (t) => {
+  const call = await start(t);
+  await call('POST', '/api/locks/acquire', lock);
+  assert.equal((await call('GET', '/api/standup', null, { auth: false })).status, 400);
+  const r = await call('GET', '/api/standup?repo=demo-repo', null, { auth: false });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.hours, 24);
+  assert.equal(r.body.developers[0].developer_id, 'alice');
+  assert.equal(r.body.developers[0].timeline[0].event, 'lock');
 });

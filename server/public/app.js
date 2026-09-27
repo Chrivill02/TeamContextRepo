@@ -1,7 +1,11 @@
-import { renderLocks, renderActivity, countConflicts, renderStandup } from './view.js';
+import { renderLocks, renderActivity, countConflicts, renderStandup, repoList, renderRepoPicker } from './view.js';
 
-const repo = new URLSearchParams(location.search).get('repo');
+const params = new URLSearchParams(location.search);
+const repo = params.get('repo');
 const repoQuery = repo ? `repo=${encodeURIComponent(repo)}` : '';
+const WINDOWS = [8, 24, 72];
+let hours = WINDOWS.includes(Number(params.get('hours'))) ? Number(params.get('hours')) : 24;
+let newestKey = null;
 const $ = (id) => document.getElementById(id);
 
 async function getJson(url) {
@@ -10,31 +14,71 @@ async function getJson(url) {
   return res.json();
 }
 
+const eventKey = (e) => `${e.created_at}|${e.developer_id}|${e.event}|${e.file_path ?? ''}`;
+
+// How many events at the top of the feed are new since the previous refresh (0 on first load).
+function countFresh(events) {
+  if (newestKey === null) return 0;
+  const i = events.findIndex((e) => eventKey(e) === newestKey);
+  return i === -1 ? events.length : i;
+}
+
+function activeDevelopers(events, now) {
+  const since = now - 24 * 3_600_000;
+  return new Set(events.filter((e) => new Date(e.created_at) >= since).map((e) => e.developer_id)).size;
+}
+
+// Re-rendering every few seconds must not collapse timelines the viewer opened.
+function renderSessions(developers, now) {
+  const open = new Set([...document.querySelectorAll('article.session details[open]')].map((d) => d.closest('article').dataset.dev));
+  $('sessions').innerHTML = renderStandup(developers, now, { hours });
+  for (const article of document.querySelectorAll('article.session')) {
+    if (open.has(article.dataset.dev)) article.querySelector('details')?.setAttribute('open', '');
+  }
+}
+
 async function refresh() {
   try {
-    const [status, activity] = await Promise.all([
+    const [status, activity, standup] = await Promise.all([
       getJson(`/api/locks/status?${repoQuery}`),
       getJson(`/api/activity?${repoQuery}&limit=50`),
+      repo ? getJson(`/api/standup?${repoQuery}&hours=${hours}`) : null,
     ]);
     const now = new Date();
-    $('locks').innerHTML = renderLocks(status.active_locks, now);
+    const fresh = countFresh(activity.events);
+    newestKey = activity.events[0] ? eventKey(activity.events[0]) : newestKey;
+
+    $('locks').innerHTML = renderLocks(status.active_locks, now, { ttlMinutes: status.ttl_minutes ?? 30, showRepo: !repo });
+    $('activity').innerHTML = renderActivity(activity.events, now, { fresh });
     $('lock-count').textContent = status.count;
-    $('activity').innerHTML = renderActivity(activity.events, now);
-    $('conflicts').textContent = countConflicts(activity.events);
-    $('updated').textContent = `Last updated ${now.toLocaleTimeString()}`;
-    $('updated').classList.remove('error');
+    $('conflicts').textContent = status.conflicts_avoided ?? countConflicts(activity.events);
+    $('devs').textContent = standup ? standup.developers.length : activeDevelopers(activity.events, now);
+    if (standup) renderSessions(standup.developers, now);
+    else $('sessions').innerHTML = renderRepoPicker(repoList(activity.events));
+
+    $('live').className = 'live ok';
+    $('live-text').textContent = `Live · updated ${now.toLocaleTimeString()}`;
   } catch (err) {
-    $('updated').textContent = `Server unreachable — retrying… (${err.message})`;
-    $('updated').classList.add('error');
+    $('live').className = 'live error';
+    $('live-text').textContent = `Server unreachable — retrying… (${err.message})`;
+  }
+}
+
+function selectWindow(h) {
+  hours = h;
+  for (const b of document.querySelectorAll('[data-hours]')) b.setAttribute('aria-pressed', String(Number(b.dataset.hours) === h));
+  $('devs-label').textContent = `developers active (${repo ? `${h}h` : '24h'})`;
+  if (repo) {
+    params.set('hours', h);
+    history.replaceState(null, '', `?${params}`);
   }
 }
 
 $('repo').textContent = repo ?? 'all repos';
+for (const b of document.querySelectorAll('[data-hours]')) {
+  b.addEventListener('click', () => { selectWindow(Number(b.dataset.hours)); refresh(); });
+}
+$('window-picker').hidden = !repo;
+selectWindow(hours);
 refresh();
 setInterval(refresh, 4000);
-
-$('standup-btn').addEventListener('click', async () => {
-  if (!repo) { $('standup').textContent = 'Open the dashboard with ?repo=<name> to generate a standup.'; return; }
-  const { developers } = await getJson(`/api/standup?repo=${encodeURIComponent(repo)}&hours=8`);
-  $('standup').innerHTML = renderStandup(developers);
-});
