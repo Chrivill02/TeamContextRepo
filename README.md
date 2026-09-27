@@ -4,14 +4,13 @@
 
 **A traffic light for AI coding agents.** TeamContext stops two developers' AI agents from editing the same file at the same time. Before IBM Bob edits a file, it claims a lock. If a teammate's agent already holds that file, Bob stops and says who has it and since when.
 
-Built for the **IBM Bob 2.0 Hackathon** (lablab.ai × IBM) by Eswin Poroj and Christian Villegas.
+Built for the **IBM Bob 2.0 Hackathon** (lablab.ai × IBM) by Eswin Poroj and Christian Villegas. See [Problem & Solution](PROBLEM_AND_SOLUTION.md) and [How we used IBM Bob](IBM_BOB_USAGE.md).
 
 | | |
 |---|---|
 | **Live dashboard** | https://team-context-omega.vercel.app |
 | **MCP server on npm** | [`teamcontext-mcp`](https://www.npmjs.com/package/teamcontext-mcp) · `npm i teamcontext-mcp` |
 | **Demo repository** | [Chrivill02/teamcontext-demo](https://github.com/Chrivill02/teamcontext-demo) |
-| **Video** | [TODO: video link] |
 
 ## The problem
 
