@@ -6,6 +6,8 @@ Every developer on a team now codes with their own AI agent, and those agents ar
 
 Today teams coordinate this manually, by asking in chat who is touching which file, or they don't coordinate at all and pay for it in rework.
 
+**Who it is for:** software teams of two or more developers working in the same repository, where each developer codes with their own AI agent. It matters most in small, fast-moving teams (startups, agencies, hackathon teams) where people touch the same files every day and there is no time for manual coordination.
+
 ## The solution
 
 **TeamContext is a traffic light for AI coding agents.**

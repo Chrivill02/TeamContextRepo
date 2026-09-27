@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TeamContext cover</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1920px; height: 1080px; background: #12151C; overflow: hidden; }
+  body { position: relative; color: #F3F1EA; font-family: 'IBM Plex Sans', Arial, sans-serif; }
+  .text { position: absolute; left: 128px; top: 128px; bottom: 128px; width: 1140px; display: flex; flex-direction: column; justify-content: space-between; }
+  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 28px; color: #F2B233; letter-spacing: 5px; text-transform: uppercase; }
+  h1 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 176px; font-weight: 700; line-height: 1; letter-spacing: -5px; margin-top: 40px; }
+  .tagline { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 60px; font-weight: 500; line-height: 1.15; margin-top: 36px; }
+  .sub { font-size: 32px; line-height: 1.45; color: #B9C0CC; margin-top: 32px; max-width: 1040px; }
+  .code { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 30px; color: #12151C; background: #F2B233; padding: 14px 26px; border-radius: 12px; }
+  .light { position: absolute; left: 1420px; top: 104px; width: 340px; height: 872px; background: #1E232D; border: 2px solid #2C3240; border-radius: 170px; }
+  .lamp { position: absolute; left: 1470px; width: 240px; height: 240px; border-radius: 50%; }
+  .red { top: 150px; background: #E5484D; box-shadow: 0 0 80px rgba(229, 72, 77, .45); }
+  .amber { top: 420px; background: #F2B233; box-shadow: 0 0 80px rgba(242, 178, 51, .45); }
+  .green { top: 690px; background: #2FBF71; box-shadow: 0 0 80px rgba(47, 191, 113, .45); }
+</style>
+</head>
+<body>
+  <div class="light"></div>
+  <div class="lamp red"></div>
+  <div class="lamp amber"></div>
+  <div class="lamp green"></div>
+  <div class="text">
+    <div>
+      <p class="eyebrow">IBM Bob 2.0 Hackathon</p>
+      <h1>TeamContext</h1>
+      <p class="tagline">A traffic light for AI coding agents</p>
+      <p class="sub">IBM Bob locks a file before editing it, so teammates' agents never edit the same file at once.</p>
+    </div>
+    <p><span class="code">npx -y teamcontext-mcp</span></p>
+  </div>
+</body>
+</html>
