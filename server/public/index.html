@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TeamContext</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
+  <style>
+    :root {
+      --bg:#0b0d12; --card:#141821; --card-2:#1a1f2b; --line:#252b38; --text:#e8eaf0; --muted:#8a91a3;
+      --red:#f2555a; --green:#3dd68c; --amber:#ffb224; --blue:#5eb1ff;
+      --radius:14px; --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display:none !important; }
+    body {
+      margin:0; min-height:100vh; padding:28px 16px 48px; color:var(--text);
+      font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: radial-gradient(1200px 500px at 10% -10%, #1b2440 0%, transparent 60%), var(--bg);
+    }
+    .wrap { max-width:1180px; margin:0 auto; display:grid; gap:18px; }
+
+    /* Header */
+    .top { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between; }
+    .brand { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    h1 { margin:0; font-size:24px; letter-spacing:-0.02em; }
+    .repo-chip { font:13px var(--mono); padding:4px 10px; border-radius:999px; background:var(--card-2); border:1px solid var(--line); color:var(--muted); }
+    .live { display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+    .live .dot { width:9px; height:9px; border-radius:50%; background:var(--muted); }
+    .live.ok .dot { background:var(--green); box-shadow:0 0 0 0 color-mix(in srgb, var(--green) 60%, transparent); animation:pulse 2s infinite; }
+    .live.error { color:var(--red); } .live.error .dot { background:var(--red); }
+    @keyframes pulse { 70% { box-shadow:0 0 0 8px transparent; } 100% { box-shadow:0 0 0 0 transparent; } }
+
+    /* KPIs */
+    .kpis { display:grid; gap:14px; grid-template-columns:repeat(3, 1fr); }
+    .kpi { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; position:relative; overflow:hidden; }
+    .kpi::before { content:""; position:absolute; inset:0 auto 0 0; width:4px; background:var(--accent); }
+    .kpi b { display:block; font-size:34px; line-height:1.1; font-variant-numeric:tabular-nums; color:var(--accent); }
+    .kpi span { color:var(--muted); font-size:13px; }
+    .kpi.locks { --accent:var(--red); } .kpi.conflicts { --accent:var(--amber); } .kpi.devs { --accent:var(--blue); }
+
+    /* Panels */
+    .grid { display:grid; gap:18px; grid-template-columns: 1fr 1fr; align-items:start; }
+    section { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; min-width:0; }
+    .section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+    h2 { margin:0; font-size:13px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); font-weight:600; }
+    code { font:12.5px var(--mono); background:var(--card-2); border:1px solid var(--line); padding:1px 6px; border-radius:6px; }
+    .muted { color:var(--muted); font-size:13px; }
+
+    .dev { display:inline-flex; align-items:center; gap:6px; font-weight:600; }
+    .dev::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--dev); flex:none; }
+
+    /* Locks */
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th { text-align:left; font-weight:500; color:var(--muted); font-size:12px; padding:0 10px 8px; }
+    td { padding:10px; border-top:1px solid var(--line); white-space:nowrap; }
+    tr.locked td { background:color-mix(in srgb, var(--red) 12%, transparent); }
+    tr.locked td:first-child { box-shadow: inset 3px 0 var(--red); }
+    .all-clear { padding:28px 16px; text-align:center; border-radius:10px; font-weight:600;
+      background:color-mix(in srgb, var(--green) 12%, transparent); border:1px dashed color-mix(in srgb, var(--green) 40%, transparent); }
+
+    /* Activity */
+    .feed { list-style:none; margin:0; padding:0; max-height:430px; overflow-y:auto; }
+    .feed li { padding:9px 10px; border-top:1px solid var(--line); border-radius:8px; }
+    .feed li:first-child { border-top:0; }
+    .event.conflict { background:color-mix(in srgb, var(--amber) 14%, transparent); }
+    .event[data-fresh] { animation:fresh 2.5s ease-out; }
+    @keyframes fresh { from { background:color-mix(in srgb, var(--blue) 35%, transparent); } }
+    .summary { margin:4px 0 0 26px; color:var(--text); font-style:italic; opacity:0.9; }
+
+    /* Sessions */
+    .segmented { display:inline-flex; background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:3px; }
+    .segmented button { font:inherit; font-size:13px; color:var(--muted); background:none; border:0; border-radius:7px; padding:4px 12px; cursor:pointer; }
+    .segmented button[aria-pressed="true"] { background:var(--card); color:var(--text); box-shadow:0 1px 0 var(--line); }
+    .segmented button:focus-visible, .repo-link:focus-visible, summary:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+    #sessions { display:grid; gap:14px; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); align-items:start; }
+    #sessions > p { grid-column:1 / -1; margin:0; }
+    .session { background:var(--card-2); border:1px solid var(--line); border-top:3px solid var(--dev); border-radius:12px; padding:14px 16px; min-width:0; }
+    .session header { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+    .stats-line { margin:6px 0 10px; font-size:13px; color:var(--muted); }
+    .files { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
+    .handoffs { margin:0 0 10px; padding-left:18px; } .handoffs li { margin:2px 0; font-style:italic; }
+    details summary { cursor:pointer; color:var(--blue); font-size:13px; }
+    .timeline { margin:8px 0 0; padding-left:0; list-style:none; font-size:13px; border-left:2px solid var(--line); }
+    .timeline li { padding:3px 0 3px 12px; }
+    .summary-inline { font-style:italic; }
+    .repo-picker { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .repo-link { font:13px var(--mono); color:var(--text); text-decoration:none; padding:6px 12px; border-radius:8px; background:var(--card-2); border:1px solid var(--line); }
+    .repo-link:hover { border-color:var(--blue); }
+
+    @media (max-width: 860px) { .grid { grid-template-columns:1fr; } }
+    @media (max-width: 560px) {
+      .kpis { gap:8px; } .kpi { padding:12px 10px 12px 14px; } .kpi b { font-size:26px; } .kpi span { font-size:12px; line-height:1.3; display:block; }
+      #sessions { grid-template-columns:1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) { .live.ok .dot, .event[data-fresh] { animation:none; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <h1>🚦 TeamContext</h1>
+        <span class="repo-chip" id="repo"></span>
+      </div>
+      <span id="live" class="live" role="status"><span class="dot"></span><span id="live-text">Connecting…</span></span>
+    </header>
+
+    <div class="kpis">
+      <div class="kpi locks"><b id="lock-count">0</b><span>files locked right now</span></div>
+      <div class="kpi conflicts"><b id="conflicts">0</b><span>conflicts avoided</span></div>
+      <div class="kpi devs"><b id="devs">0</b><span id="devs-label">developers active</span></div>
+    </div>
+
+    <div class="grid">
+      <section><div class="section-head"><h2>Who is editing what</h2></div><div id="locks" class="table-wrap"></div></section>
+      <section><div class="section-head"><h2>Activity &amp; handoff notes</h2></div><div id="activity"></div></section>
+    </div>
+
+    <section>
+      <div class="section-head">
+        <h2>Developer sessions</h2>
+        <div id="window-picker" class="segmented" role="group" aria-label="Session window">
+          <button type="button" data-hours="8">8h</button>
+          <button type="button" data-hours="24">24h</button>
+          <button type="button" data-hours="72">72h</button>
+        </div>
+      </div>
+      <div id="sessions"><p class="muted">Loading…</p></div>
+    </section>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "teamcontext": {
+      "command": "npx",
+      "args": ["-y", "teamcontext-mcp"],
+      "env": {
+        "CENTRAL_SERVER_URL": "https://<your-project>.vercel.app",
+        "TEAM_TOKEN": "<ask teammate via DM — never commit>",
+        "DEVELOPER_ID": "christian-demo",
+        "REPO_ROOT": "/ABSOLUTE/PATH/TO/teamcontext-demo"
+      }
+    }
+  }
+}

@@ -1,53 +1,69 @@
 # TeamContext
 
-**TeamContext** is a semaphore-based Model Context Protocol (MCP) system designed to prevent code collisions when multiple developers use AI agents (like Bob) on the same repository. It acts as a lightweight traffic controller, alerting developers and their AI agents if someone else is already editing a specific file.
+**A traffic light for AI coding agents.** TeamContext stops two developers' AI agents from editing the same file at the same time. Before IBM Bob edits a file, it claims a lock. If a teammate's agent already holds that file, Bob stops and says who has it.
 
-Built for the **IBM BOB 2.0 Hackathon**.
+Built for the **IBM Bob 2.0 Hackathon** (lablab.ai × IBM).
 
-## Overview
+## The problem
 
-When a team of developers works on the same codebase using AI assistants, two agents might try to modify the same file simultaneously, leading to merge conflicts or lost work. TeamContext solves this by introducing an explicit lock/unlock mechanism.
+Every developer on the team now codes with their own AI agent, and those agents don't know what the others are doing. The result is two agents editing the same file, merge conflicts, silent API changes, and time lost catching up.
 
-### Key Components
+## How it works
 
-1. **Central Server (`/server`)**: A Node.js + Express + SQLite backend that tracks active file locks across the team.
-2. **Local MCP Server (`/mcp-server`)**: Runs locally on each developer's machine. Exposes `file_lock` and `file_unlock` tools to the AI assistant, allowing it to claim files before modifying them.
-3. **Web Dashboard (`/dashboard`)**: A real-time static dashboard to visualize currently locked files and who is working on them.
-
-## Folder Structure
-
-```text
-teamcontext/
-├── server/                    # Central Server (deployed to Render/Railway/etc)
-├── mcp-server/                # Local MCP Server (runs on each developer's machine)
-├── dashboard/                 # Static Web Dashboard (served from Central Server)
-└── README.md
+```
+ Bob (custom mode "TeamContext")
+   │  calls MCP tools automatically: team_status → file_lock → edit → file_unlock → release_all
+   ▼
+ Local MCP server (stdio, one per developer)
+   │  HTTPS + team token
+   ▼
+ Central server — Express on Vercel, data in Supabase Postgres
+   │
+   ▼
+ Live dashboard — who is editing what, conflicts avoided, handoff notes
 ```
 
-## How It Works
+1. **Bob custom mode + rules (`bob/`)**: Bob calls the tools itself, before and after every edit, without being asked.
+2. **Local MCP server (`mcp-server/`)**: exposes `file_lock`, `file_unlock`, `release_all` and `team_status`. It detects the repo from `git`, normalizes paths, and never crashes if the server is unreachable.
+3. **Central server (`server/`)**: a REST API for locks and activity. Lock acquisition is a single Postgres transaction, locks expire after a TTL, and each unlock carries a handoff summary.
+4. **Dashboard (`server/public/`)**: a static page that polls every 4 seconds and holds no secrets.
 
-1. The AI assistant decides to edit `src/components/Header.tsx`.
-2. Before making changes, it calls the `file_lock` MCP tool.
-3. The Local MCP Server forwards this request to the Central Server.
-4. **If the file is free:** The lock is granted, and the AI proceeds with its edits.
-5. **If the file is locked:** The AI receives a conflict warning indicating which developer currently holds the lock, prompting it to wait or notify the user.
-6. Once the edit is complete, the AI calls the `file_unlock` tool, freeing the file for others.
+## Repository layout
 
-## Setup & Deployment
+```
+supabase/migrations/   Postgres schema + atomic acquire() function
+server/                Express API (Vercel root directory) + dashboard in public/
+mcp-server/            Local MCP server used by Bob
+bob/                   TeamContext custom mode, rules, mcp.example.json
+bob_sessions/          Screenshots of every Bob task session (hackathon evidence)
+docs/superpowers/plans/ Implementation plan
+TEAMCONTEXT_CONTEXT.md Project context: hackathon rules, API contract, demo script
+```
 
-*Refer to the [Execution Plan](./teamcontext-mvp-plan.md) for detailed implementation and deployment steps.*
+## Setup
 
-### 1. Central Server
-- Deploy the `server/` directory to a Node.js hosting provider (e.g., Render, Railway).
-- Set the `TEAM_TOKEN` environment variable.
+### 1. Central server (Vercel + Supabase)
+1. Create a Vercel project with **Root Directory `server`**. Add Supabase from the Vercel Marketplace (Storage → Supabase). This injects `POSTGRES_URL`.
+2. Run `supabase/migrations/20260926000000_teamcontext.sql` in the Supabase SQL editor.
+3. Set the env vars `TEAM_TOKEN`, `SUPABASE_CA_CERT` and `LOCK_TTL_MINUTES`, then run `vercel --prod`.
+4. Check that `curl https://<project>.vercel.app/health` returns `{"ok":true}`.
 
-### 2. Local MCP Server
-- Each developer runs the `mcp-server` locally.
-- Configure `.bob/mcp.json` with the `CENTRAL_SERVER_URL`, `TEAM_TOKEN`, and a unique `DEVELOPER_ID`.
+### 2. Local MCP server (each developer)
+The MCP server is published on npm as [`teamcontext-mcp`](https://www.npmjs.com/package/teamcontext-mcp), so there is nothing to clone or install: your MCP client runs it with `npx -y teamcontext-mcp`.
 
-### 3. Dashboard
-- Accessible via the Central Server's public URL (served statically). Polls the server to show real-time lock statuses.
+Copy `bob/mcp.example.json` into your project's `.bob/mcp.json` (gitignored) and fill in `CENTRAL_SERVER_URL`, `TEAM_TOKEN`, a unique `DEVELOPER_ID` and `REPO_ROOT`. See [mcp-server/README.md](mcp-server/README.md) for details.
+
+### 3. Bob custom mode
+Install `bob/custom_modes.yaml` and `bob/rules-teamcontext/` in your project's `.bob/` folder, then select the **🚦 TeamContext** mode in Bob.
+
+## Development
+
+```bash
+npm test          # runs server + mcp-server test suites (node:test, PGlite for Postgres)
+```
+
+The MCP server works with any MCP-compatible client, but Bob is the first-class agent.
 
 ## License
 
-MIT License
+MIT, see [LICENSE](LICENSE).

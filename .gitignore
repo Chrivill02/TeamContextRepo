@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.local
+.env*.local
+.vercel/
+.bob/mcp.json
+.DS_Store
+.playwright-mcp/
+.cursor/mcp.json
