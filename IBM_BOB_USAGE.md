@@ -1,6 +1,6 @@
 # How we used IBM Bob
 
-Bob is both the builder of TeamContext and the core of the product. Session summaries for every Bob task are in [`bob_sessions/`](bob_sessions/).
+Bob is both the builder of TeamContext and the core of the product. Session summaries for every Bob task are in [`bob_sessions/`](bob_sessions/), together with the exported Bob reports of the main tasks (`*_report.md`).
 
 ## Bob as the product's agent
 
