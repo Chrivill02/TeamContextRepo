@@ -6,3 +6,4 @@ node_modules/
 .bob/mcp.json
 .DS_Store
 .playwright-mcp/
+.cursor/mcp.json
