@@ -2,7 +2,7 @@
 
 **A traffic light for AI coding agents.** TeamContext stops two developers' AI agents from editing the same file at the same time. Before IBM Bob edits a file, it claims a lock. If a teammate's agent already holds that file, Bob stops and says who has it.
 
-Built for the **IBM Bob 2.0 Hackathon** (lablab.ai × IBM).
+Built for the **IBM Bob 2.0 Hackathon** (lablab.ai × IBM). See [Problem & Solution](PROBLEM_AND_SOLUTION.md) and [How we used IBM Bob](IBM_BOB_USAGE.md).
 
 ## The problem
 
