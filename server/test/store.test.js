@@ -143,7 +143,37 @@ test('standup groups finished files, handoffs and conflicts per developer', asyn
   await store.release({ ...A, summary: 'Added dark mode toggle' });
   await store.releaseAll({ developerId: 'alice', repo: 'demo-repo', summary: 'Header done, tests pending' });
   assert.deepEqual(await store.standup('demo-repo', 8), [
-    { developer_id: 'alice', files: ['src/header.js'], handoffs: ['Added dark mode toggle', 'Header done, tests pending'], conflicts: 0 },
-    { developer_id: 'bob', files: [], handoffs: [], conflicts: 1 },
+    {
+      developer_id: 'alice', files: ['src/header.js'], handoffs: ['Added dark mode toggle', 'Header done, tests pending'], conflicts: 0,
+      tasks_completed: 1, first_at: '2026-09-26T10:00:00.000Z', last_at: '2026-09-26T10:10:00.000Z',
+      timeline: [
+        { event: 'lock', file_path: 'src/header.js', summary: null, created_at: '2026-09-26T10:00:00.000Z' },
+        { event: 'unlock', file_path: 'src/header.js', summary: 'Added dark mode toggle', created_at: '2026-09-26T10:10:00.000Z' },
+        { event: 'release_all', file_path: null, summary: 'Header done, tests pending', created_at: '2026-09-26T10:10:00.000Z' },
+      ],
+    },
+    {
+      developer_id: 'bob', files: [], handoffs: [], conflicts: 1,
+      tasks_completed: 0, first_at: '2026-09-26T10:00:00.000Z', last_at: '2026-09-26T10:00:00.000Z',
+      timeline: [{ event: 'conflict', file_path: 'src/header.js', summary: 'blocked by alice', created_at: '2026-09-26T10:00:00.000Z' }],
+    },
   ]);
+});
+
+test('standup covers the last 24h by default and drops older sessions', async (t) => {
+  const { store, clock } = await setup(t);
+  await store.acquire(A);
+  clock.advance(23 * 60);
+  assert.deepEqual((await store.standup('demo-repo')).map((d) => d.developer_id), ['alice']);
+  clock.advance(2 * 60);
+  assert.deepEqual(await store.standup('demo-repo'), []);
+});
+
+test('conflictCount counts every conflict for the repo, not just recent activity', async (t) => {
+  const { store } = await setup(t);
+  await store.acquire(A);
+  for (let i = 0; i < 3; i += 1) await store.acquire(B);
+  await store.acquire({ ...B, repo: 'other' });
+  assert.equal(await store.conflictCount('demo-repo'), 3);
+  assert.equal(await store.conflictCount(), 3);
 });

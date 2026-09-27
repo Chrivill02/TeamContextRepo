@@ -46,8 +46,9 @@ export function createApiRouter(store, auth) {
   });
 
   router.get('/locks/status', async (req, res) => {
-    const active_locks = await store.activeLocks(repoOf(req.query));
-    res.json({ active_locks, count: active_locks.length });
+    const repo = repoOf(req.query);
+    const [active_locks, conflicts_avoided] = await Promise.all([store.activeLocks(repo), store.conflictCount(repo)]);
+    res.json({ active_locks, count: active_locks.length, conflicts_avoided, ttl_minutes: store.ttlMinutes });
   });
 
   router.get('/activity', async (req, res) => {
@@ -66,8 +67,8 @@ export function createApiRouter(store, auth) {
   router.get('/standup', async (req, res) => {
     const repo = repoOf(req.query);
     if (!repo) return res.status(400).json({ error: 'repo is required' });
-    const hours = Math.min(Math.max(Number(req.query.hours) || 8, 1), 72);
-    res.json({ developers: await store.standup(repo, hours) });
+    const hours = Math.min(Math.max(Number(req.query.hours) || 24, 1), 72);
+    res.json({ hours, developers: await store.standup(repo, hours) });
   });
 
   return router;
