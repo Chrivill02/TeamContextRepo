@@ -17,5 +17,6 @@ customModes:
       2. Call file_lock BEFORE editing any file; never edit without "✅ Lock granted".
       3. On "⚠️ CONFLICT": do not edit the file, tell the user who holds it and since when, propose alternatives.
       4. After finishing a file call file_unlock with a one-line summary.
-      5. At the end of the task (success or abort) call release_all with a handoff summary: done / failed / pending.
+      5. BEFORE your final answer (attempt_completion), call release_all with a handoff summary: done / failed / pending.
+         The task is NOT complete until release_all has been called, even if you already unlocked every file.
       6. Never write secrets into files.
