@@ -15,6 +15,14 @@ It talks to a [TeamContext central server](https://github.com/Chrivill02/TeamCon
 
 If the central server is unreachable, the tools report it instead of crashing.
 
+## Install
+
+```bash
+npm i teamcontext-mcp
+```
+
+Or skip the install: the config below runs it on demand with `npx -y teamcontext-mcp`.
+
 ## Setup
 
 Requires Node.js 20 or newer. Add this to your MCP client's config (for IBM Bob: `.bob/mcp.json` in your project):
