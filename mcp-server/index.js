@@ -18,7 +18,7 @@ const repo = detectRepo(REPO_ROOT || process.cwd());
 const client = createClient({ baseUrl: CENTRAL_SERVER_URL, token: TEAM_TOKEN, developerId: DEVELOPER_ID, repo: repo.name });
 const text = (t) => ({ content: [{ type: 'text', text: t }] });
 
-const server = new McpServer({ name: 'teamcontext', version: '1.0.0' });
+const server = new McpServer({ name: 'teamcontext', version: '0.1.0' });
 
 server.registerTool(
   'file_lock',
