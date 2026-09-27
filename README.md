@@ -4,6 +4,8 @@
 
 Built for the **IBM Bob 2.0 Hackathon** (lablab.ai × IBM). See [Problem & Solution](PROBLEM_AND_SOLUTION.md) and [How we used IBM Bob](IBM_BOB_USAGE.md).
 
+**Live dashboard:** https://team-context-omega.vercel.app
+
 ## The problem
 
 Every developer on the team now codes with their own AI agent, and those agents don't know what the others are doing. The result is two agents editing the same file, merge conflicts, silent API changes, and time lost catching up.
