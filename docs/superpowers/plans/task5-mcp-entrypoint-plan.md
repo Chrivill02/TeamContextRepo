@@ -48,12 +48,12 @@
 - With server stopped: `file_lock` → `⚠️ TeamContext server unreachable (...)`, process stays alive.
 
 **Todo List:**
-- [ ] ⚠️ **Eswin (manual):** Run the inspector command from the plan against a live server URL.
-- [ ] Verify all 4 smoke test scenarios pass.
+- [x] ⚠️ **Eswin (manual):** Run the inspector command from the plan against a live server URL.
+- [x] Verify all 4 smoke test scenarios pass.
 
 **Relevant Context:** `docs/superpowers/plans/2026-09-26-teamcontext-mvp.md` §Task 5 Step 2. If Christian's Vercel deploy isn't ready yet, you can run `node server/server.js` locally (needs `.env.local`) — coordinate with Christian via DM.
 
-**Status:** [ ] pending
+**Status:** [x] done — verified via Bob CLI: acquire ✅, conflict 409 ✅, release ✅, activity feed ✅, server-unreachable returns ⚠️ warning (no crash) ✅. Server: https://team-context-omega.vercel.app
 
 ---
 
