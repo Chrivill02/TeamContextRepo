@@ -9,7 +9,7 @@ Built for the **IBM Bob 2.0 Hackathon** (lablab.ai × IBM) by Eswin Poroj and Ch
 | | |
 |---|---|
 | **Live dashboard** | https://team-context-omega.vercel.app |
-| **MCP server on npm** | [`teamcontext-mcp`](https://www.npmjs.com/package/teamcontext-mcp) |
+| **MCP server on npm** | [`teamcontext-mcp`](https://www.npmjs.com/package/teamcontext-mcp) · `npm i teamcontext-mcp` |
 | **Demo repository** | [Chrivill02/teamcontext-demo](https://github.com/Chrivill02/teamcontext-demo) |
 | **Video** | [TODO: video link] |
 
@@ -46,6 +46,16 @@ When a file is taken, the second agent receives:
 ```
 
 It stops, tells its developer, and offers options: work on other files, wait and retry, or coordinate with the teammate.
+
+## Install from npm
+
+The MCP server is published on npm: **https://www.npmjs.com/package/teamcontext-mcp**
+
+```bash
+npm i teamcontext-mcp
+```
+
+You can also skip the install and let your MCP client download and run it on demand with `npx -y teamcontext-mcp`, which is what [`bob/mcp.example.json`](bob/mcp.example.json) does.
 
 ## Try it in 3 steps
 
